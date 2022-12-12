@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "orm-bridge"
+version = "0.1.0"
+description = ""
+authors = ["timoniq"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "orm_bridge"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pydantic = "^1.10.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
