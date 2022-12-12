@@ -14,6 +14,11 @@ class FieldMapping(pydantic.BaseModel):
     name: str
     nullable: bool = False
     default: typing.Optional[AnyValue] = None
+    primary_key: bool = False
+    max_length: int = 255
+    minimum: typing.Optional[int] = None
+    maximum: typing.Optional[int] = None
 
 class ModelMapping(pydantic.BaseModel):
+    name: str
     fields: list[FieldMapping]

@@ -1,11 +1,9 @@
 import abc
 import typing
 from orm_bridge.mapping import ModelMapping, FieldMapping, FieldType
-from orm_bridge.field import Field
 
 Model = typing.TypeVar("Model")
 ORMField = typing.TypeVar("ORMField")
-FieldConverter = typing.Callable[[Field], ORMField]
 
 
 class FieldBridge(abc.ABC, typing.Generic[ORMField]):
