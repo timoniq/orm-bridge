@@ -16,8 +16,10 @@ class FieldMapping(pydantic.BaseModel):
     default: typing.Optional[AnyValue] = None
     primary_key: bool = False
     max_length: int = 255
-    minimum: typing.Optional[int] = None
-    maximum: typing.Optional[int] = None
+    ge: typing.Optional[int] = None
+    le: typing.Optional[int] = None
+    autoincrement: bool = False
+    unique: bool = False
 
 class ModelMapping(pydantic.BaseModel):
     name: str

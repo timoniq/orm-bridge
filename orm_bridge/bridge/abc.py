@@ -14,7 +14,7 @@ class FieldBridge(abc.ABC, typing.Generic[ORMField]):
         pass
 
     @abc.abstractmethod
-    def field_to_mapping(self, field: ORMField) -> FieldMapping:
+    def field_to_mapping(self, name: str, field: ORMField) -> FieldMapping:
         pass
 
 

@@ -1,4 +1,5 @@
 from .mapping import FieldType
+import typing
 
 class BridgeError(Exception):
     pass
@@ -16,4 +17,15 @@ class NoFieldBridge(BridgeError):
     def __str__(self) -> str:
         return (
             f"There is no field bridge for field `{self.field_name}` of type {self.field_type.value}"
+        )
+
+
+class FieldBridgeError(BridgeError):
+    def __init__(self, field_name: str, details: typing.Optional[str] = None) -> None:
+        self.field_name = field_name
+        self.details = details
+    
+    def __str__(self) -> str:
+        return (
+            f"Can't bridge field `{self.field_name}`" + (self.details or "")
         )
