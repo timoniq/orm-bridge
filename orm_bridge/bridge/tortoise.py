@@ -60,6 +60,7 @@ class IntegerTortoise(FieldBridge[tortoise.fields.IntField]):
             null=mapping.nullable,
             default=mapping.default,
             validators=validators,
+            index=mapping.index,
         )
     
     def field_to_mapping(self, name: str, field: tortoise.fields.IntField) -> FieldMapping:
@@ -79,6 +80,7 @@ class IntegerTortoise(FieldBridge[tortoise.fields.IntField]):
             primary_key=field_info["pk"],
             unique=field_info["unique"],
             default=field_info["default"],
+            index=field_info["index"],
             **kwargs,
         )
 
@@ -92,15 +94,37 @@ class StringTortoise(FieldBridge[tortoise.fields.CharField]):
             pk=mapping.primary_key,
             default=mapping.default,
             unique=mapping.unique,
+            index=mapping.index,
         )
     
     def field_to_mapping(self, name: str, field: tortoise.fields.CharField) -> FieldMapping:
+        field_info: dict = field.__dict__
         return FieldMapping(
             name=name,
             type=FieldType.STRING,
-            nullable=field.null,
-            primary_key=field.pk,
-            max_length=field.max_length,
-            unique=field.unique,
-            default=field.default,
+            nullable=field_info["null"],
+            primary_key=field_info["pk"],
+            max_length=field_info["max_length"],
+            unique=field_info["unique"],
+            default=field_info["default"],
+            index=field_info["index"],
+        )
+
+@TortoiseBridge.field(FieldType.BOOLEAN)
+class BooleanTortoise(FieldBridge[tortoise.fields.BooleanField]):
+    def mapping_to_field(self, mapping: FieldMapping) -> tortoise.fields.BooleanField:
+        return tortoise.fields.BooleanField(
+            null=mapping.nullable,
+            default=mapping.default,
+            index=mapping.index,
+        )
+    
+    def field_to_mapping(self, name: str, field: tortoise.fields.BooleanField) -> FieldMapping:
+        field_info: dict = field.__dict__
+        return FieldMapping(
+            name=name,
+            type=FieldType.BOOLEAN,
+            nullable=field_info["null"],
+            default=field_info["default"],
+            index=field_info["index"],
         )

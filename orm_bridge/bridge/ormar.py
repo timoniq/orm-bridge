@@ -57,6 +57,7 @@ class IntegerOrmar(FieldBridge[ormar.fields.Integer]):
             minimum=mapping.ge,  # type: ignore
             maximum=mapping.le,  # type: ignore
             autoincrement=mapping.autoincrement,
+            index=mapping.index,
         )
 
     def field_to_mapping(self, name: str, field: ormar.fields.Integer) -> FieldMapping:
@@ -70,6 +71,7 @@ class IntegerOrmar(FieldBridge[ormar.fields.Integer]):
             ge=info.get("ge"),
             le=info.get("le"),
             unique=info["unique"],
+            index=info.get("index", False),
         )
 
 
@@ -81,6 +83,7 @@ class StringOrmar(FieldBridge[ormar.fields.String]):
             default=mapping.default,
             primary_key=mapping.primary_key,
             max_length=mapping.max_length,
+            index=mapping.index,
         )
     
     def field_to_mapping(self, name: str, field: ormar.fields.String) -> FieldMapping:
@@ -92,4 +95,25 @@ class StringOrmar(FieldBridge[ormar.fields.String]):
             default=info.get("default", None),
             primary_key=info.get("primary_key", False),
             unique=info["unique"],
+            index=info.get("index", False)
+        )
+
+
+@OrmarBridge.field(FieldType.BOOLEAN)
+class BooleanOrmar(FieldBridge[ormar.fields.model_fields.BaseField]):
+    def mapping_to_field(self, mapping: FieldMapping) -> ormar.fields.model_fields.BaseField:
+        return ormar.fields.Boolean(  # type: ignore
+            nullable=mapping.nullable,
+            default=mapping.default,
+            index=mapping.index,
+        )
+    
+    def field_to_mapping(self, name: str, field: ormar.fields.model_fields.BaseField) -> FieldMapping:
+        info = field.__dict__
+        return FieldMapping(
+            name=name, 
+            type=FieldType.BOOLEAN,
+            nullable=info["nullable"],
+            default=info.get("default", None),
+            index=info.get("index", False),
         )

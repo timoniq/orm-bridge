@@ -7,6 +7,7 @@ AnyValue = typing.Union[int, float, str]
 class FieldType(enum.Enum):
     INTEGER = "integer"
     STRING = "string"
+    BOOLEAN = "boolean"
 
 
 class FieldMapping(pydantic.BaseModel):
@@ -20,6 +21,7 @@ class FieldMapping(pydantic.BaseModel):
     le: typing.Optional[int] = None
     autoincrement: bool = False
     unique: bool = False
+    index: bool = False
 
 class ModelMapping(pydantic.BaseModel):
     name: str
