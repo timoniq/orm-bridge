@@ -10,6 +10,7 @@ from orm_bridge.bridge.abc import Bridge, FieldBridge
 TORTOISE_TYPE_MAPPING = {
     "IntField": FieldType.INTEGER,
     "CharField": FieldType.STRING,
+    "BooleanField": FieldType.BOOLEAN,
 }
 
 

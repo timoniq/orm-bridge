@@ -10,6 +10,7 @@ from orm_bridge.bridge.abc import Bridge, FieldBridge
 ORMAR_TYPE_MAPPING = {
     "Integer": FieldType.INTEGER,
     "String": FieldType.STRING,
+    "Boolean": FieldType.BOOLEAN,
 }
 
 
