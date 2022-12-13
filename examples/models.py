@@ -1,10 +1,18 @@
-from ormar import Model, ModelMeta, Integer, String
+import ormar
 
-
-class User(Model):
-    class Meta(ModelMeta):
+class User(ormar.Model):
+    class Meta(ormar.ModelMeta):
         tablename: str = "users"
         abstract = True
 
-    id = Integer(primary_key=True, autoincrement=True, nullable=False)
-    name = String(max_length=31, nullable=False, default="Anonymous")
+    id = ormar.Integer(primary_key=True, autoincrement=True, nullable=False)
+    name = ormar.String(max_length=31, nullable=False, default="Anonymous")
+
+
+import tortoise
+
+
+class Product(tortoise.Model):
+    id = tortoise.fields.IntField(pk=True)
+    name = tortoise.fields.CharField(255)
+    in_stock = tortoise.fields.IntField()

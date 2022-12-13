@@ -17,6 +17,9 @@ class Translator:
         self.from_orm = from_orm
         self.to_orm = to_orm
     
-    def translate(self, model: typing.Type[FromModel]) -> typing.Type[ToModel]:
+    def translate(
+        self,
+        model: typing.Type[FromModel],
+    ) -> typing.Type[ToModel]:
         mapping = self.from_orm.get_mapping(model)
         return self.to_orm.get_model(mapping)

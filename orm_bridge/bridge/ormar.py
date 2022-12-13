@@ -6,7 +6,6 @@ from orm_bridge.errors import NoFieldBridge, FieldBridgeError, BridgeError
 import ormar
 import pydantic
 import typing
-import inspect
 
 
 ORMAR_TYPE_MAPPING = {
@@ -16,6 +15,8 @@ ORMAR_TYPE_MAPPING = {
 
 
 class OrmarBridge(Bridge[ormar.Model]):
+
+    fields = {}
 
     def get_model(self, mapping: ModelMapping) -> typing.Type[ormar.Model]:
         fields: dict[str, ormar.BaseField] = {}
@@ -30,7 +31,7 @@ class OrmarBridge(Bridge[ormar.Model]):
         return type(mapping.name, (ormar.Model,), params)  # type: ignore
     
     def get_mapping(self, model: typing.Type[ormar.Model]) -> ModelMapping:
-        meta: typing.Optional[ormar.ModelMeta] = getattr(model, "Meta")
+        meta: typing.Optional[ormar.ModelMeta] = getattr(model, "Meta", None)
         if not meta:
             raise BridgeError("Ormar model should have Meta")
         
@@ -63,7 +64,7 @@ class IntegerOrmar(FieldBridge[ormar.fields.Integer]):
         return FieldMapping(
             name=name,
             type=FieldType.INTEGER,
-            nullable=info["nullable"],
+            nullable=info["nullable"] and not info.get("primary_key"),
             default=info.get("default", None),
             primary_key=info.get("primary_key", False),
             ge=info.get("ge"),

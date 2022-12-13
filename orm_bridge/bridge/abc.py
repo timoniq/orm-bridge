@@ -21,7 +21,7 @@ class FieldBridge(abc.ABC, typing.Generic[ORMField]):
 class Bridge(abc.ABC, typing.Generic[Model]):
     """Base class for bridges"""
 
-    fields: dict[FieldType, typing.Type[FieldBridge]] = {}
+    fields: dict[FieldType, typing.Type[FieldBridge]]
     
     @abc.abstractmethod
     def get_model(self, mapping: ModelMapping) -> typing.Type[Model]:
