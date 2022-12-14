@@ -17,7 +17,7 @@ class FieldMapping(pydantic.BaseModel):
     type: FieldType
     name: str
     nullable: bool = False
-    choices: typing.Optional[list[Value]] = None
+    choices: typing.Optional[set[Value]] = None
     default: typing.Optional[Value] = None
     primary_key: bool = False
     max_length: int = 255

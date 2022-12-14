@@ -100,6 +100,7 @@ class StringOrmar(FieldBridge[ormar.fields.String]):
             primary_key=info.get("primary_key", False),
             unique=info["unique"],
             index=info.get("index", False),
+            choices=info.get("choices") or None,
         )
 
 

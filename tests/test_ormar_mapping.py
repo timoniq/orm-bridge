@@ -8,6 +8,7 @@ class User(ormar.Model):
     id = ormar.Integer(primary_key=True, autoincrement=True, nullable=False)
     name = ormar.String(max_length=31, nullable=False, default="Anonymous")
     is_active = ormar.Boolean(default=True, nullable=False)
+    role = ormar.String(max_length=31, choices=["customer", "seller"], nullable=False)
 
     class Meta(ormar.ModelMeta):
         tablename: str = "users"
@@ -18,7 +19,7 @@ def test_ormar_mapping():
     bridge = OrmarBridge()
     mapping = bridge.get_mapping(User)
     assert mapping.name == "users"
-    assert len(mapping.fields) == 3
+    assert len(mapping.fields) == 4
     assert mapping.fields[0] == FieldMapping(
         name="id",
         type=FieldType.INTEGER,
@@ -36,4 +37,10 @@ def test_ormar_mapping():
         name="is_active",
         type=FieldType.BOOLEAN,
         default=True,
+    )
+    assert mapping.fields[3] == FieldMapping(
+        name="role",
+        type=FieldType.STRING,
+        max_length=31,
+        choices={"customer", "seller"},
     )

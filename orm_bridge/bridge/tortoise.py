@@ -1,4 +1,5 @@
 import typing
+import enum
 
 import tortoise
 
@@ -10,6 +11,7 @@ from orm_bridge.bridge.abc import Bridge, FieldBridge
 TORTOISE_TYPE_MAPPING = {
     "IntField": FieldType.INTEGER,
     "CharField": FieldType.STRING,
+    "CharEnumFieldInstance": FieldType.STRING,
     "BooleanField": FieldType.BOOLEAN,
 }
 
@@ -100,6 +102,7 @@ class StringTortoise(FieldBridge[tortoise.fields.CharField]):
             default=mapping.default,
             unique=mapping.unique,
             index=mapping.index,
+            choices=mapping.choices,
         )
 
     def field_to_mapping(
@@ -115,7 +118,16 @@ class StringTortoise(FieldBridge[tortoise.fields.CharField]):
             unique=field_info["unique"],
             default=field_info["default"],
             index=field_info["index"],
+            choices=(
+                self.convert_choice_enum(field_info["enum_type"])
+                if field_info.get("enum_type")
+                else None
+            ),
         )
+
+    @classmethod
+    def convert_choice_enum(cls, choice_enum: typing.Type[enum.Enum]) -> set[str]:
+        return set(element.value for element in choice_enum)
 
 
 @TortoiseBridge.field(FieldType.BOOLEAN)
