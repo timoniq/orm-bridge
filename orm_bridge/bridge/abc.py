@@ -1,6 +1,7 @@
 import abc
 import typing
-from orm_bridge.mapping import ModelMapping, FieldMapping, FieldType
+
+from orm_bridge.mapping import FieldMapping, FieldType, ModelMapping
 
 Model = typing.TypeVar("Model")
 ORMField = typing.TypeVar("ORMField")
@@ -22,7 +23,7 @@ class Bridge(abc.ABC, typing.Generic[Model]):
     """Base class for bridges"""
 
     fields: dict[FieldType, typing.Type[FieldBridge]]
-    
+
     @abc.abstractmethod
     def get_model(self, mapping: ModelMapping) -> typing.Type[Model]:
         pass
@@ -33,7 +34,7 @@ class Bridge(abc.ABC, typing.Generic[Model]):
 
     @classmethod
     def field(
-        cls, 
+        cls,
         field_type: FieldType,
     ) -> typing.Callable[[typing.Type[FieldBridge]], typing.Type[FieldBridge]]:
         """Decorator to wrap ORM-specific field bridges"""
@@ -43,5 +44,5 @@ class Bridge(abc.ABC, typing.Generic[Model]):
         ) -> typing.Type[FieldBridge]:
             cls.fields[field_type] = bridge_cls
             return bridge_cls
-        
+
         return wrapper

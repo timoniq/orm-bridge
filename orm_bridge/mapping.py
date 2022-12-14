@@ -1,8 +1,10 @@
-import pydantic
-import typing
 import enum
+import typing
+
+import pydantic
 
 AnyValue = typing.Union[int, float, str]
+
 
 class FieldType(enum.Enum):
     INTEGER = "integer"
@@ -22,6 +24,7 @@ class FieldMapping(pydantic.BaseModel):
     autoincrement: bool = False
     unique: bool = False
     index: bool = False
+
 
 class ModelMapping(pydantic.BaseModel):
     name: str

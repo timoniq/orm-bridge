@@ -1,12 +1,11 @@
-from .abc import Bridge, FieldBridge
-
-from orm_bridge.mapping import ModelMapping, FieldMapping, FieldType
-from orm_bridge.errors import NoFieldBridge, FieldBridgeError, BridgeError
-
-import tortoise
-import pydantic
 import typing
 
+import tortoise
+
+from orm_bridge.errors import FieldBridgeError, NoFieldBridge
+from orm_bridge.mapping import FieldMapping, FieldType, ModelMapping
+
+from orm_bridge.bridge.abc import Bridge, FieldBridge
 
 TORTOISE_TYPE_MAPPING = {
     "IntField": FieldType.INTEGER,
@@ -29,17 +28,20 @@ class TortoiseBridge(Bridge[tortoise.Model]):
 
         params: dict[str, typing.Any] = {**fields}
         return type(mapping.name, (tortoise.Model,), params)  # type: ignore
-    
+
     def get_mapping(self, model: typing.Type[tortoise.Model]) -> ModelMapping:
         fields: list[FieldMapping] = []
 
         for name, field in model._meta.fields_map.items():
             field_type = TORTOISE_TYPE_MAPPING.get(field.__class__.__name__)
             if not field_type:
-                raise FieldBridgeError(name, f"no translation for ormar type {field.__class__.__name__}")
+                raise FieldBridgeError(
+                    name,
+                    f"no translation for ormar type {field.__class__.__name__}",
+                )
             field_mapping = self.fields[field_type]()
             fields.append(field_mapping.field_to_mapping(name, field))
-        
+
         return ModelMapping(name="", fields=fields)
 
 
@@ -53,7 +55,7 @@ class IntegerTortoise(FieldBridge[tortoise.fields.IntField]):
             validators.append(tortoise.validators.MinValueValidator(mapping.ge))
         if mapping.le is not None:
             validators.append(tortoise.validators.MaxValueValidator(mapping.le))
-        
+
         return tortoise.fields.IntField(
             pk=mapping.primary_key,
             unique=mapping.unique,
@@ -62,17 +64,17 @@ class IntegerTortoise(FieldBridge[tortoise.fields.IntField]):
             validators=validators,
             index=mapping.index,
         )
-    
+
     def field_to_mapping(self, name: str, field: tortoise.fields.IntField) -> FieldMapping:
         kwargs: dict[str, int] = {}
         field_info: dict = field.__dict__
-        
+
         for validator in field_info.get("validators", []):
             if isinstance(validator, tortoise.validators.MinValueValidator):
                 kwargs["ge"] = int(validator.min_value)
             elif isinstance(validator, tortoise.validators.MaxValueValidator):
                 kwargs["le"] = int(validator.max_value)
-        
+
         return FieldMapping(
             name=name,
             type=FieldType.INTEGER,
@@ -96,7 +98,7 @@ class StringTortoise(FieldBridge[tortoise.fields.CharField]):
             unique=mapping.unique,
             index=mapping.index,
         )
-    
+
     def field_to_mapping(self, name: str, field: tortoise.fields.CharField) -> FieldMapping:
         field_info: dict = field.__dict__
         return FieldMapping(
@@ -110,6 +112,7 @@ class StringTortoise(FieldBridge[tortoise.fields.CharField]):
             index=field_info["index"],
         )
 
+
 @TortoiseBridge.field(FieldType.BOOLEAN)
 class BooleanTortoise(FieldBridge[tortoise.fields.BooleanField]):
     def mapping_to_field(self, mapping: FieldMapping) -> tortoise.fields.BooleanField:
@@ -118,8 +121,12 @@ class BooleanTortoise(FieldBridge[tortoise.fields.BooleanField]):
             default=mapping.default,
             index=mapping.index,
         )
-    
-    def field_to_mapping(self, name: str, field: tortoise.fields.BooleanField) -> FieldMapping:
+
+    def field_to_mapping(
+            self,
+            name: str,
+            field: tortoise.fields.BooleanField,
+    ) -> FieldMapping:
         field_info: dict = field.__dict__
         return FieldMapping(
             name=name,

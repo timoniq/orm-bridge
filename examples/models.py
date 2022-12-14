@@ -1,4 +1,6 @@
 import ormar
+import tortoise
+
 
 class User(ormar.Model):
     class Meta(ormar.ModelMeta):
@@ -7,9 +9,6 @@ class User(ormar.Model):
 
     id = ormar.Integer(primary_key=True, autoincrement=True, nullable=False)
     name = ormar.String(max_length=31, nullable=False, default="Anonymous")
-
-
-import tortoise
 
 
 class Product(tortoise.Model):
