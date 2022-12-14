@@ -6,14 +6,19 @@ import tortoise
 from orm_bridge.errors import FieldBridgeError, NoFieldBridge
 from orm_bridge.mapping import FieldMapping, FieldType, ModelMapping
 
-from orm_bridge.bridge.abc import Bridge, FieldBridge
+from orm_bridge.bridge.abc import Bridge, FieldBridge, ErrorMode
 
 TORTOISE_TYPE_MAPPING = {
     "IntField": FieldType.INTEGER,
     "CharField": FieldType.STRING,
     "CharEnumFieldInstance": FieldType.STRING,
     "BooleanField": FieldType.BOOLEAN,
+    "ForeignKeyFieldInstance": FieldType.FOREIGN_KEY,
 }
+
+
+def get_tablename(model: typing.Type[tortoise.Model]) -> str:
+    return model._meta.db_table or model.__name__.lower() + "s"
 
 
 class TortoiseBridge(Bridge[tortoise.Model]):
@@ -26,7 +31,7 @@ class TortoiseBridge(Bridge[tortoise.Model]):
         for field in mapping.fields:
             if field.type not in self.fields:
                 raise NoFieldBridge(field.name, field.type)
-            field_mapping = self.fields[field.type]()
+            field_mapping = self.fields[field.type](self)
             fields[field.name] = field_mapping.mapping_to_field(field)
 
         params: dict[str, typing.Any] = {**fields}
@@ -38,15 +43,16 @@ class TortoiseBridge(Bridge[tortoise.Model]):
         for name, field in model._meta.fields_map.items():
             field_type = TORTOISE_TYPE_MAPPING.get(field.__class__.__name__)
             if not field_type:
+                if self.field_error == ErrorMode.IGNORE:
+                    continue
                 raise FieldBridgeError(
                     name,
                     f"no translation for ormar type {field.__class__.__name__}",
                 )
-            field_mapping = self.fields[field_type]()
+            field_mapping = self.fields[field_type](self)
             fields.append(field_mapping.field_to_mapping(name, field))
 
-        name = model._meta.db_table or model.__name__.lower() + "s"
-        return ModelMapping(name=name, fields=fields)
+        return ModelMapping(name=get_tablename(model), fields=fields)
 
 
 @TortoiseBridge.field(FieldType.INTEGER)
@@ -151,4 +157,51 @@ class BooleanTortoise(FieldBridge[tortoise.fields.BooleanField]):
             nullable=field_info["null"],
             default=field_info["default"],
             index=field_info["index"],
+        )
+
+
+@TortoiseBridge.field(FieldType.FOREIGN_KEY)
+class FKTortoise(FieldBridge[tortoise.fields.ForeignKeyRelation]):
+    def mapping_to_field(
+        self, mapping: FieldMapping
+    ) -> tortoise.fields.ForeignKeyRelation:
+        assert mapping.tablename is not None
+
+        model: typing.Optional[typing.Type[tortoise.Model]] = None
+        for m in self.model_bridge.model_names.values():
+            if get_tablename(m) == mapping.tablename:
+                model = m
+                break
+
+        if not model:
+            raise FieldBridgeError(
+                mapping.name,
+                f"Model with tablename `{mapping.tablename}` "
+                "is not declared in bridge model_names. "
+                "Unable to map a FK as actual model cannot be resolved",
+            )
+
+        return tortoise.fields.ForeignKeyField(
+            mapping.tablename,
+            model=model,
+        )
+
+    def field_to_mapping(
+        self,
+        name: str,
+        field: tortoise.fields.ForeignKeyRelation,
+    ) -> FieldMapping:
+        info = field.__dict__
+        model = self.model_bridge.model_names.get(info["model_name"])
+        if not model:
+            raise FieldBridgeError(
+                name,
+                f"Model `{info['model_name']}` which is needed for FK was not found, "
+                "please provide it to bridge",
+            )
+
+        return FieldMapping(
+            name=name,
+            type=FieldType.FOREIGN_KEY,
+            tablename=get_tablename(model),
         )

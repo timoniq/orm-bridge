@@ -1,21 +1,9 @@
-import ormar
-
 from orm_bridge.bridge.ormar import OrmarBridge
 from orm_bridge.mapping import FieldType, FieldMapping
+from tests.ormar_models import User, Registration
 
 
-class User(ormar.Model):
-    id = ormar.Integer(primary_key=True, autoincrement=True, nullable=False)
-    name = ormar.String(max_length=31, nullable=False, default="Anonymous")
-    is_active = ormar.Boolean(default=True, nullable=False)
-    role = ormar.String(max_length=31, choices=["customer", "seller"], nullable=False)
-
-    class Meta(ormar.ModelMeta):
-        tablename: str = "users"
-        abstract = True
-
-
-def test_ormar_mapping():
+def test_ormar_mapping() -> None:
     bridge = OrmarBridge()
     mapping = bridge.get_mapping(User)
     assert mapping.name == "users"
@@ -43,4 +31,20 @@ def test_ormar_mapping():
         type=FieldType.STRING,
         max_length=31,
         choices={"customer", "seller"},
+    )
+
+
+def test_ormar_mapping_fk() -> None:
+    bridge = OrmarBridge()
+    mapping = bridge.get_mapping(Registration)
+    assert mapping.fields[0] == FieldMapping(
+        name="id",
+        type=FieldType.INTEGER,
+        primary_key=True,
+        nullable=False,
+    )
+    assert mapping.fields[1] == FieldMapping(
+        name="user",
+        type=FieldType.FOREIGN_KEY,
+        tablename="users",
     )

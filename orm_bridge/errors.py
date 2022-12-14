@@ -30,4 +30,4 @@ class FieldBridgeError(BridgeError):
         self.details = details
 
     def __str__(self) -> str:
-        return f"Can't bridge field `{self.field_name}`" + (self.details or "")
+        return f"Can't bridge field `{self.field_name}` " + (self.details or "")

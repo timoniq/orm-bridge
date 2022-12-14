@@ -5,12 +5,14 @@ import ormar
 from orm_bridge.errors import BridgeError, FieldBridgeError, NoFieldBridge
 from orm_bridge.mapping import FieldMapping, FieldType, ModelMapping
 
-from orm_bridge.bridge.abc import Bridge, FieldBridge
+from orm_bridge.bridge.abc import Bridge, FieldBridge, ErrorMode
 
 ORMAR_TYPE_MAPPING = {
     "Integer": FieldType.INTEGER,
     "String": FieldType.STRING,
     "Boolean": FieldType.BOOLEAN,
+    "ForeignKey": FieldType.FOREIGN_KEY,
+    "DateTime": FieldType.DATETIME,
 }
 
 
@@ -24,7 +26,7 @@ class OrmarBridge(Bridge[ormar.Model]):
         for field in mapping.fields:
             if field.type not in self.fields:
                 raise NoFieldBridge(field.name, field.type)
-            field_mapping = self.fields[field.type]()
+            field_mapping = self.fields[field.type](self)
             fields[field.name] = field_mapping.mapping_to_field(field)
 
         params: dict[str, typing.Any] = {**fields}
@@ -39,11 +41,13 @@ class OrmarBridge(Bridge[ormar.Model]):
         for name, model_field in meta.model_fields.items():
             field_type = ORMAR_TYPE_MAPPING.get(model_field.__class__.__name__)
             if not field_type:
+                if self.field_error == ErrorMode.IGNORE:
+                    continue
                 raise FieldBridgeError(
                     name,
                     f"no translation for ormar type {model_field.__class__.__name__}",
                 )
-            field_mapping = self.fields[field_type]()
+            field_mapping = self.fields[field_type](self)
             fields.append(field_mapping.field_to_mapping(name, model_field))
 
         return ModelMapping(name=meta.tablename, fields=fields)
@@ -127,4 +131,27 @@ class BooleanOrmar(FieldBridge[ormar.fields.model_fields.BaseField]):
             nullable=info["nullable"],
             default=info.get("ormar_default", None),
             index=info.get("index", False),
+        )
+
+
+@OrmarBridge.field(FieldType.FOREIGN_KEY)
+class FKOrmar(FieldBridge[ormar.fields.ForeignKeyField]):
+    def mapping_to_field(self, mapping: FieldMapping) -> ormar.fields.ForeignKeyField:
+        raise NotImplementedError()
+
+    def field_to_mapping(
+        self,
+        name: str,
+        field: ormar.fields.ForeignKeyField,
+    ) -> FieldMapping:
+        info = field.__dict__
+
+        fk_constraint = info["constraints"][0]
+        tablename = fk_constraint.reference.split(".", 1)[0]
+
+        return FieldMapping(
+            name=name,
+            type=FieldType.FOREIGN_KEY,
+            index=info.get("index", False),
+            tablename=tablename,
         )

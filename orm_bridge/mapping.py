@@ -11,6 +11,8 @@ class FieldType(enum.Enum):
     INTEGER = "integer"
     STRING = "string"
     BOOLEAN = "boolean"
+    FOREIGN_KEY = "foreign_key"
+    DATETIME = "datetime"
 
 
 class FieldMapping(pydantic.BaseModel):
@@ -26,6 +28,7 @@ class FieldMapping(pydantic.BaseModel):
     autoincrement: bool = False
     unique: bool = False
     index: bool = False
+    tablename: typing.Optional[str] = None
 
 
 class ModelMapping(pydantic.BaseModel):

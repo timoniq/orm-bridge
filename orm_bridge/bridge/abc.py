@@ -1,4 +1,5 @@
 import abc
+import enum
 import typing
 
 from orm_bridge.mapping import FieldMapping, FieldType, ModelMapping
@@ -7,8 +8,16 @@ Model = typing.TypeVar("Model")
 ORMField = typing.TypeVar("ORMField")
 
 
+class ErrorMode(enum.IntEnum):
+    IGNORE = enum.auto()
+    PANIC = enum.auto()
+
+
 class FieldBridge(abc.ABC, typing.Generic[ORMField]):
     """Base class for field bridges"""
+
+    def __init__(self, model_bridge: "Bridge") -> None:
+        self.model_bridge = model_bridge
 
     @abc.abstractmethod
     def mapping_to_field(self, mapping: FieldMapping) -> ORMField:
@@ -23,6 +32,16 @@ class Bridge(abc.ABC, typing.Generic[Model]):
     """Base class for bridges"""
 
     fields: dict[FieldType, typing.Type[FieldBridge]]
+
+    def __init__(
+        self,
+        model_names: typing.Optional[dict[str, typing.Type[Model]]] = None,
+        field_error: ErrorMode = ErrorMode.PANIC,
+        **kwargs,
+    ) -> None:
+        self.field_error = field_error
+        self.model_names = model_names or {}
+        self.kwargs = kwargs
 
     @abc.abstractmethod
     def get_model(self, mapping: ModelMapping) -> typing.Type[Model]:
