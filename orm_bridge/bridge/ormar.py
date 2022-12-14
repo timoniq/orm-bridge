@@ -121,6 +121,6 @@ class BooleanOrmar(FieldBridge[ormar.fields.model_fields.BaseField]):
             name=name,
             type=FieldType.BOOLEAN,
             nullable=info["nullable"],
-            default=info.get("default", None),
+            default=info.get("ormar_default", None),
             index=info.get("index", False),
         )

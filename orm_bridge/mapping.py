@@ -3,9 +3,6 @@ import typing
 
 import pydantic
 
-AnyValue = typing.Union[int, float, str]
-
-
 class FieldType(enum.Enum):
     INTEGER = "integer"
     STRING = "string"
@@ -16,7 +13,7 @@ class FieldMapping(pydantic.BaseModel):
     type: FieldType
     name: str
     nullable: bool = False
-    default: typing.Optional[AnyValue] = None
+    default: typing.Optional[typing.Any] = None
     primary_key: bool = False
     max_length: int = 255
     ge: typing.Optional[int] = None
