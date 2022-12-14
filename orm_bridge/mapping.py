@@ -3,6 +3,7 @@ import typing
 
 import pydantic
 
+
 class FieldType(enum.Enum):
     INTEGER = "integer"
     STRING = "string"
