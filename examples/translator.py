@@ -1,8 +1,8 @@
 from orm_bridge import Translator
-from .models import User
-
 from orm_bridge.bridge.ormar import OrmarBridge
 from orm_bridge.bridge.tortoise import TortoiseBridge
+
+from examples.models import User
 
 translator = Translator(OrmarBridge(), TortoiseBridge())
 

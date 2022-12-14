@@ -2,7 +2,7 @@ import orm_bridge
 from orm_bridge.bridge.ormar import OrmarBridge
 
 mapping = orm_bridge.ModelMapping(
-    name="users", 
+    name="users",
     fields=[
         orm_bridge.FieldMapping(
             type=orm_bridge.FieldType.INTEGER,
