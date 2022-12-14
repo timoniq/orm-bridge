@@ -1,13 +1,13 @@
 import ormar
 
 from orm_bridge.bridge.ormar import OrmarBridge
-from orm_bridge.mapping import FieldType
+from orm_bridge.mapping import FieldType, FieldMapping
 
 
 class User(ormar.Model):
     id = ormar.Integer(primary_key=True, autoincrement=True, nullable=False)
     name = ormar.String(max_length=31, nullable=False, default="Anonymous")
-    is_active = ormar.Boolean(default=True)
+    is_active = ormar.Boolean(default=True, nullable=False)
 
     class Meta(ormar.ModelMeta):
         tablename: str = "users"
@@ -17,12 +17,23 @@ class User(ormar.Model):
 def test_ormar_mapping():
     bridge = OrmarBridge()
     mapping = bridge.get_mapping(User)
+    assert mapping.name == "users"
     assert len(mapping.fields) == 3
-    assert mapping.name == "user"
-    assert mapping.fields[0].type == FieldType.INTEGER
-    assert mapping.fields[0].name == "id"
-    assert mapping.fields[1].type == FieldType.STRING
-    assert mapping.fields[1].name == "name"
-    assert mapping.fields[2].type == FieldType.BOOLEAN
-    assert mapping.fields[2].name == "is_active"
-    assert mapping.fields[2].default is True
+    assert mapping.fields[0] == FieldMapping(
+        name="id",
+        type=FieldType.INTEGER,
+        primary_key=True,
+        nullable=False,
+    )
+    assert mapping.fields[1] == FieldMapping(
+        name="name",
+        type=FieldType.STRING,
+        max_length=31,
+        nullable=False,
+        default="Anonymous",
+    )
+    assert mapping.fields[2] == FieldMapping(
+        name="is_active",
+        type=FieldType.BOOLEAN,
+        default=True,
+    )

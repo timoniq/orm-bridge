@@ -4,6 +4,9 @@ import typing
 import pydantic
 
 
+Value = typing.Any
+
+
 class FieldType(enum.Enum):
     INTEGER = "integer"
     STRING = "string"
@@ -14,7 +17,8 @@ class FieldMapping(pydantic.BaseModel):
     type: FieldType
     name: str
     nullable: bool = False
-    default: typing.Optional[typing.Any] = None
+    choices: typing.Optional[list[Value]] = None
+    default: typing.Optional[Value] = None
     primary_key: bool = False
     max_length: int = 255
     ge: typing.Optional[int] = None

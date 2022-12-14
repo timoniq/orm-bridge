@@ -43,12 +43,12 @@ class TortoiseBridge(Bridge[tortoise.Model]):
             field_mapping = self.fields[field_type]()
             fields.append(field_mapping.field_to_mapping(name, field))
 
-        return ModelMapping(name="", fields=fields)
+        name = model._meta.db_table or model.__name__.lower() + "s"
+        return ModelMapping(name=name, fields=fields)
 
 
 @TortoiseBridge.field(FieldType.INTEGER)
 class IntegerTortoise(FieldBridge[tortoise.fields.IntField]):
-
     def mapping_to_field(self, mapping: FieldMapping) -> tortoise.fields.IntField:
         validators: list[tortoise.validators.Validator] = []
 
@@ -66,7 +66,9 @@ class IntegerTortoise(FieldBridge[tortoise.fields.IntField]):
             index=mapping.index,
         )
 
-    def field_to_mapping(self, name: str, field: tortoise.fields.IntField) -> FieldMapping:
+    def field_to_mapping(
+        self, name: str, field: tortoise.fields.IntField
+    ) -> FieldMapping:
         kwargs: dict[str, int] = {}
         field_info: dict = field.__dict__
 
@@ -100,7 +102,9 @@ class StringTortoise(FieldBridge[tortoise.fields.CharField]):
             index=mapping.index,
         )
 
-    def field_to_mapping(self, name: str, field: tortoise.fields.CharField) -> FieldMapping:
+    def field_to_mapping(
+        self, name: str, field: tortoise.fields.CharField
+    ) -> FieldMapping:
         field_info: dict = field.__dict__
         return FieldMapping(
             name=name,
@@ -124,9 +128,9 @@ class BooleanTortoise(FieldBridge[tortoise.fields.BooleanField]):
         )
 
     def field_to_mapping(
-            self,
-            name: str,
-            field: tortoise.fields.BooleanField,
+        self,
+        name: str,
+        field: tortoise.fields.BooleanField,
     ) -> FieldMapping:
         field_info: dict = field.__dict__
         return FieldMapping(

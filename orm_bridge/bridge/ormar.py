@@ -46,12 +46,11 @@ class OrmarBridge(Bridge[ormar.Model]):
             field_mapping = self.fields[field_type]()
             fields.append(field_mapping.field_to_mapping(name, model_field))
 
-        return ModelMapping(name=model.get_name(), fields=fields)
+        return ModelMapping(name=meta.tablename, fields=fields)
 
 
 @OrmarBridge.field(FieldType.INTEGER)
 class IntegerOrmar(FieldBridge[ormar.fields.Integer]):
-
     def mapping_to_field(self, mapping: FieldMapping) -> ormar.fields.Integer:
         return ormar.fields.Integer(
             nullable=mapping.nullable,
@@ -69,7 +68,7 @@ class IntegerOrmar(FieldBridge[ormar.fields.Integer]):
             name=name,
             type=FieldType.INTEGER,
             nullable=info["nullable"] and not info.get("primary_key"),
-            default=info.get("default", None),
+            default=info.get("ormar_default", None),
             primary_key=info.get("primary_key", False),
             ge=info.get("ge"),
             le=info.get("le"),
@@ -87,6 +86,7 @@ class StringOrmar(FieldBridge[ormar.fields.String]):
             primary_key=mapping.primary_key,
             max_length=mapping.max_length,
             index=mapping.index,
+            choices=mapping.choices,
         )
 
     def field_to_mapping(self, name: str, field: ormar.fields.String) -> FieldMapping:
@@ -95,16 +95,19 @@ class StringOrmar(FieldBridge[ormar.fields.String]):
             name=name,
             type=FieldType.STRING,
             nullable=info["nullable"],
-            default=info.get("default", None),
+            max_length=info["column_type"].length,
+            default=info.get("ormar_default", None),
             primary_key=info.get("primary_key", False),
             unique=info["unique"],
-            index=info.get("index", False)
+            index=info.get("index", False),
         )
 
 
 @OrmarBridge.field(FieldType.BOOLEAN)
 class BooleanOrmar(FieldBridge[ormar.fields.model_fields.BaseField]):
-    def mapping_to_field(self, mapping: FieldMapping) -> ormar.fields.model_fields.BaseField:
+    def mapping_to_field(
+        self, mapping: FieldMapping
+    ) -> ormar.fields.model_fields.BaseField:
         return ormar.fields.Boolean(  # type: ignore
             nullable=mapping.nullable,
             default=mapping.default,
@@ -112,9 +115,9 @@ class BooleanOrmar(FieldBridge[ormar.fields.model_fields.BaseField]):
         )
 
     def field_to_mapping(
-            self,
-            name: str,
-            field: ormar.fields.model_fields.BaseField,
+        self,
+        name: str,
+        field: ormar.fields.model_fields.BaseField,
     ) -> FieldMapping:
         info = field.__dict__
         return FieldMapping(

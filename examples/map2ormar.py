@@ -12,8 +12,8 @@ mapping = orm_bridge.ModelMapping(
         orm_bridge.FieldMapping(
             type=orm_bridge.FieldType.STRING,
             name="name",
-        )
-    ]
+        ),
+    ],
 )
 
 ormar_bridge = OrmarBridge()

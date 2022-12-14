@@ -9,11 +9,7 @@ ToModel = typing.TypeVar("ToModel")
 class Translator:
     """Translates model from one ORM to another"""
 
-    def __init__(
-        self,
-        from_orm: Bridge[FromModel],
-        to_orm: Bridge[ToModel]
-    ) -> None:
+    def __init__(self, from_orm: Bridge[FromModel], to_orm: Bridge[ToModel]) -> None:
         self.from_orm = from_orm
         self.to_orm = to_orm
 

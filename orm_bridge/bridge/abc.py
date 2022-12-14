@@ -39,9 +39,7 @@ class Bridge(abc.ABC, typing.Generic[Model]):
     ) -> typing.Callable[[typing.Type[FieldBridge]], typing.Type[FieldBridge]]:
         """Decorator to wrap ORM-specific field bridges"""
 
-        def wrapper(
-            bridge_cls: typing.Type[FieldBridge]
-        ) -> typing.Type[FieldBridge]:
+        def wrapper(bridge_cls: typing.Type[FieldBridge]) -> typing.Type[FieldBridge]:
             cls.fields[field_type] = bridge_cls
             return bridge_cls
 
