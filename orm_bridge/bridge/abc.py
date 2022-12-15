@@ -3,6 +3,7 @@ import enum
 import typing
 
 from orm_bridge.mapping import FieldMapping, FieldType, ModelMapping
+from orm_bridge.environment import Environment
 
 Model = typing.TypeVar("Model")
 ORMField = typing.TypeVar("ORMField")
@@ -35,12 +36,12 @@ class Bridge(abc.ABC, typing.Generic[Model]):
 
     def __init__(
         self,
-        model_names: typing.Optional[dict[str, typing.Type[Model]]] = None,
+        environment: typing.Optional[Environment[Model]] = None,
         field_error: ErrorMode = ErrorMode.PANIC,
         **kwargs,
     ) -> None:
         self.field_error = field_error
-        self.model_names = model_names or {}
+        self.environment: Environment = environment or Environment()
         self.kwargs = kwargs
 
     @abc.abstractmethod
@@ -49,6 +50,10 @@ class Bridge(abc.ABC, typing.Generic[Model]):
 
     @abc.abstractmethod
     def get_mapping(self, model: typing.Type[Model]) -> ModelMapping:
+        pass
+
+    @abc.abstractmethod
+    def get_tablename(self, model: typing.Type[Model]) -> str:
         pass
 
     @classmethod

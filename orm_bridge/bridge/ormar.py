@@ -12,7 +12,6 @@ ORMAR_TYPE_MAPPING = {
     "String": FieldType.STRING,
     "Boolean": FieldType.BOOLEAN,
     "ForeignKey": FieldType.FOREIGN_KEY,
-    "DateTime": FieldType.DATETIME,
 }
 
 
@@ -51,6 +50,12 @@ class OrmarBridge(Bridge[ormar.Model]):
             fields.append(field_mapping.field_to_mapping(name, model_field))
 
         return ModelMapping(name=meta.tablename, fields=fields)
+
+    def get_tablename(self, model: typing.Type[ormar.Model]) -> str:
+        meta: typing.Optional[ormar.ModelMeta] = getattr(model, "Meta", None)
+        if not meta:
+            raise BridgeError("Ormar model should have Meta")
+        return meta.tablename
 
 
 @OrmarBridge.field(FieldType.INTEGER)

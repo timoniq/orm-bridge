@@ -1,15 +1,18 @@
 from orm_bridge.bridge.tortoise import TortoiseBridge
+from orm_bridge.environment import Environment
 from orm_bridge.mapping import FieldType, FieldMapping
 
-from tests.tortoise_models import Product, ProductCategory
+from tests.tortoise_models import Product
 
 
 def test_tortoise_mapping() -> None:
     bridge = TortoiseBridge(
-        model_names={
-            "models.ProductCategory": ProductCategory,
-            "models.Product": Product,
-        }
+        environment=Environment(
+            tortoise_names={
+                "models.ProductCategory": "product_categories",
+                "models.Product": "products",
+            }
+        )
     )
     mapping = bridge.get_mapping(Product)
     assert mapping.name == "products"

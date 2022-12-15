@@ -35,6 +35,11 @@ class TortoiseBridge(Bridge[tortoise.Model]):
             fields[field.name] = field_mapping.mapping_to_field(field)
 
         params: dict[str, typing.Any] = {**fields}
+
+        class Meta:
+            table: str = mapping.name
+
+        params["Meta"] = Meta
         return type(mapping.name, (tortoise.Model,), params)  # type: ignore
 
     def get_mapping(self, model: typing.Type[tortoise.Model]) -> ModelMapping:
@@ -53,6 +58,9 @@ class TortoiseBridge(Bridge[tortoise.Model]):
             fields.append(field_mapping.field_to_mapping(name, field))
 
         return ModelMapping(name=get_tablename(model), fields=fields)
+
+    def get_tablename(self, model: typing.Type[tortoise.Model]) -> str:
+        return get_tablename(model)
 
 
 @TortoiseBridge.field(FieldType.INTEGER)
@@ -101,14 +109,21 @@ class IntegerTortoise(FieldBridge[tortoise.fields.IntField]):
 @TortoiseBridge.field(FieldType.STRING)
 class StringTortoise(FieldBridge[tortoise.fields.CharField]):
     def mapping_to_field(self, mapping: FieldMapping) -> tortoise.fields.CharField:
-        return tortoise.fields.CharField(
-            mapping.max_length,
+        fields = dict(
             null=mapping.nullable,
             pk=mapping.primary_key,
             default=mapping.default,
             unique=mapping.unique,
             index=mapping.index,
-            choices=mapping.choices,
+        )
+        if mapping.choices:
+            choices = enum.Enum("Choices", {c.upper(): c for c in mapping.choices})  # type: ignore
+            return tortoise.fields.CharEnumField(  # type: ignore
+                enum_type=choices, **fields  # type: ignore
+            )
+        return tortoise.fields.CharField(
+            mapping.max_length,
+            **fields,
         )
 
     def field_to_mapping(
@@ -167,23 +182,26 @@ class FKTortoise(FieldBridge[tortoise.fields.ForeignKeyRelation]):
     ) -> tortoise.fields.ForeignKeyRelation:
         assert mapping.tablename is not None
 
-        model: typing.Optional[typing.Type[tortoise.Model]] = None
-        for m in self.model_bridge.model_names.values():
-            if get_tablename(m) == mapping.tablename:
-                model = m
-                break
+        tortoise_name: str = ""
 
-        if not model:
-            raise FieldBridgeError(
-                mapping.name,
-                f"Model with tablename `{mapping.tablename}` "
-                "is not declared in bridge model_names. "
-                "Unable to map a FK as actual model cannot be resolved",
-            )
+        if (
+            "tortoise_names" in self.model_bridge.environment.options
+            and mapping.tablename
+            in self.model_bridge.environment.options["tortoise_names"].values()
+        ):
+            tortoise_names: dict[str, str] = self.model_bridge.environment.options[
+                "tortoise_names"
+            ]
+            tortoise_name = list(tortoise_names.keys())[
+                list(tortoise_names.values()).index(mapping.tablename)
+            ]
+
+        if not tortoise_name:
+            # Guessing the tortoise name
+            tortoise_name = "models." + mapping.tablename.removesuffix("s").capitalize()
 
         return tortoise.fields.ForeignKeyField(
-            mapping.tablename,
-            model=model,
+            tortoise_name,
         )
 
     def field_to_mapping(
@@ -192,16 +210,19 @@ class FKTortoise(FieldBridge[tortoise.fields.ForeignKeyRelation]):
         field: tortoise.fields.ForeignKeyRelation,
     ) -> FieldMapping:
         info = field.__dict__
-        model = self.model_bridge.model_names.get(info["model_name"])
-        if not model:
-            raise FieldBridgeError(
-                name,
-                f"Model `{info['model_name']}` which is needed for FK was not found, "
-                "please provide it to bridge",
+
+        tablename: str = ""
+
+        if "tortoise_names" in self.model_bridge.environment.options:
+            tablename = self.model_bridge.environment.options["tortoise_names"].get(
+                info["model_name"]
             )
+        if not tablename:
+            # Guessing the tablename
+            tablename = info["model_name"].split(".")[-1].lower() + "s"
 
         return FieldMapping(
             name=name,
             type=FieldType.FOREIGN_KEY,
-            tablename=get_tablename(model),
+            tablename=tablename,
         )
