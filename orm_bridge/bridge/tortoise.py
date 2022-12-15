@@ -38,7 +38,7 @@ def get_tortoise_name(tablename: str, bridge: Bridge) -> str:
         tablename = tablename.removesuffix("es")
     else:
         tablename = tablename.removesuffix("s")
-    return "models." + tablename.capitalize()
+    return tablename.capitalize()
 
 
 class TortoiseBridge(Bridge[tortoise.Model]):
@@ -208,7 +208,7 @@ class FKTortoise(FieldBridge[tortoise.fields.ForeignKeyRelation]):
 
         tortoise_name: str = get_tortoise_name(mapping.tablename, self.model_bridge)
         return tortoise.fields.ForeignKeyField(
-            tortoise_name,
+            "models." + tortoise_name,
         )
 
     def field_to_mapping(
