@@ -30,6 +30,7 @@ class FieldMapping(pydantic.BaseModel):
     index: bool = False
     tablename: typing.Optional[str] = None
     related_name: typing.Optional[str] = None
+    skip_reverse: bool = False
 
 
 class ModelMapping(pydantic.BaseModel):

@@ -60,11 +60,7 @@ class TortoiseBridge(Bridge[tortoise.Model]):
             table: str = mapping.name
 
         params["Meta"] = Meta
-        return type(
-            get_tortoise_name(mapping.name, self),
-            (tortoise.Model,),
-            params
-        )
+        return type(get_tortoise_name(mapping.name, self), (tortoise.Model,), params)
 
     def get_mapping(self, model: typing.Type[tortoise.Model]) -> ModelMapping:
         fields: list[FieldMapping] = []
@@ -209,7 +205,7 @@ class FKTortoise(FieldBridge[tortoise.fields.ForeignKeyRelation]):
         tortoise_name: str = get_tortoise_name(mapping.tablename, self.model_bridge)
         return tortoise.fields.ForeignKeyField(
             "models." + tortoise_name,
-            related_name=mapping.related_name,
+            related_name=mapping.related_name if not mapping.skip_reverse else False,
         )
 
     def field_to_mapping(
@@ -233,5 +229,6 @@ class FKTortoise(FieldBridge[tortoise.fields.ForeignKeyRelation]):
             name=name,
             type=FieldType.FOREIGN_KEY,
             tablename=tablename,
-            related_name=info["related_name"],
+            related_name=info["related_name"] or None,
+            skip_reverse=info["related_name"] is False,
         )
