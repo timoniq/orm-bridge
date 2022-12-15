@@ -38,6 +38,9 @@ class OrmarBridge(Bridge[ormar.Model]):
 
         fields: list[FieldMapping] = []
         for name, model_field in meta.model_fields.items():
+            field_info = model_field.__dict__
+            if field_info["skip_field"] or field_info["virtual"]:
+                continue
             field_type = ORMAR_TYPE_MAPPING.get(model_field.__class__.__name__)
             if not field_type:
                 if self.field_error == ErrorMode.IGNORE:
