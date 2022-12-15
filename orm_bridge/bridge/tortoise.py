@@ -21,6 +21,26 @@ def get_tablename(model: typing.Type[tortoise.Model]) -> str:
     return model._meta.db_table or model.__name__.lower() + "s"
 
 
+def get_tortoise_name(tablename: str, bridge: Bridge) -> str:
+    if (
+        "tortoise_names" in bridge.environment.options
+        and tablename in bridge.environment.options["tortoise_names"].values()
+    ):
+        tortoise_names: dict[str, str] = bridge.environment.options["tortoise_names"]
+        return list(tortoise_names.keys())[
+            list(tortoise_names.values()).index(tablename)
+        ]
+
+    # Guessing the tortoise name
+    if tablename.endswith("ies"):
+        tablename = tablename.removesuffix("ies") + "y"
+    elif tablename.endswith("es"):
+        tablename = tablename.removesuffix("es")
+    else:
+        tablename = tablename.removesuffix("s")
+    return "models." + tablename.capitalize()
+
+
 class TortoiseBridge(Bridge[tortoise.Model]):
 
     fields = {}
@@ -40,7 +60,11 @@ class TortoiseBridge(Bridge[tortoise.Model]):
             table: str = mapping.name
 
         params["Meta"] = Meta
-        return type(mapping.name, (tortoise.Model,), params)  # type: ignore
+        return type(
+            get_tortoise_name(mapping.name, self),
+            (tortoise.Model,),
+            params
+        )
 
     def get_mapping(self, model: typing.Type[tortoise.Model]) -> ModelMapping:
         fields: list[FieldMapping] = []
@@ -182,24 +206,7 @@ class FKTortoise(FieldBridge[tortoise.fields.ForeignKeyRelation]):
     ) -> tortoise.fields.ForeignKeyRelation:
         assert mapping.tablename is not None
 
-        tortoise_name: str = ""
-
-        if (
-            "tortoise_names" in self.model_bridge.environment.options
-            and mapping.tablename
-            in self.model_bridge.environment.options["tortoise_names"].values()
-        ):
-            tortoise_names: dict[str, str] = self.model_bridge.environment.options[
-                "tortoise_names"
-            ]
-            tortoise_name = list(tortoise_names.keys())[
-                list(tortoise_names.values()).index(mapping.tablename)
-            ]
-
-        if not tortoise_name:
-            # Guessing the tortoise name
-            tortoise_name = "models." + mapping.tablename.removesuffix("s").capitalize()
-
+        tortoise_name: str = get_tortoise_name(mapping.tablename, self.model_bridge)
         return tortoise.fields.ForeignKeyField(
             tortoise_name,
         )
