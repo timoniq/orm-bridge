@@ -29,6 +29,7 @@ class FieldMapping(pydantic.BaseModel):
     unique: bool = False
     index: bool = False
     tablename: typing.Optional[str] = None
+    related_name: typing.Optional[str] = None
 
 
 class ModelMapping(pydantic.BaseModel):

@@ -159,4 +159,5 @@ class FKOrmar(FieldBridge[ormar.fields.ForeignKeyField]):
             type=FieldType.FOREIGN_KEY,
             index=info.get("index", False),
             tablename=tablename,
+            related_name=info["related_name"]
         )
