@@ -205,6 +205,7 @@ class FKTortoise(FieldBridge[tortoise.fields.ForeignKeyRelation]):
         tortoise_name: str = get_tortoise_name(mapping.tablename, self.model_bridge)
         return tortoise.fields.ForeignKeyField(
             "models." + tortoise_name,
+            source_field=mapping.name,
             related_name=mapping.related_name if not mapping.skip_reverse else False,
         )
 
