@@ -178,7 +178,7 @@ class StringTortoise(FieldBridge[tortoise.fields.CharField]):
             index=mapping.index,
         )
         if mapping.choices:
-            choices = enum.Enum("Choices", {c.upper(): c for c in mapping.choices})  # type: ignore
+            choices = enum.Enum("Choices", {c: c for c in mapping.choices})  # type: ignore
             return tortoise.fields.CharEnumField(  # type: ignore
                 enum_type=choices, **fields  # type: ignore
             )
