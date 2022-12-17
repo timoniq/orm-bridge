@@ -10,6 +10,8 @@ from orm_bridge.bridge.abc import Bridge, FieldBridge, ErrorMode
 
 TORTOISE_TYPE_MAPPING = {
     "IntField": FieldType.INTEGER,
+    "BigIntField": FieldType.INTEGER,  # todo: add field types for these
+    "SmallIntField": FieldType.INTEGER,
     "FloatField": FieldType.FLOAT,
     "CharField": FieldType.STRING,
     "CharEnumFieldInstance": FieldType.STRING,

@@ -9,6 +9,8 @@ from orm_bridge.bridge.abc import Bridge, FieldBridge, ErrorMode
 
 ORMAR_TYPE_MAPPING = {
     "Integer": FieldType.INTEGER,
+    "SmallInteger": FieldType.INTEGER,  # todo: add field types for these
+    "BigInteger": FieldType.INTEGER,
     "Float": FieldType.FLOAT,
     "String": FieldType.STRING,
     "Boolean": FieldType.BOOLEAN,
