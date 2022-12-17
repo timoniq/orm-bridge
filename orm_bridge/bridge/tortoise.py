@@ -10,6 +10,7 @@ from orm_bridge.bridge.abc import Bridge, FieldBridge, ErrorMode
 
 TORTOISE_TYPE_MAPPING = {
     "IntField": FieldType.INTEGER,
+    "FloatField": FieldType.FLOAT,
     "CharField": FieldType.STRING,
     "CharEnumFieldInstance": FieldType.STRING,
     "BooleanField": FieldType.BOOLEAN,
@@ -95,9 +96,11 @@ class TortoiseBridge(Bridge[tortoise.Model]):
         return get_tablename(model)
 
 
-@TortoiseBridge.field(FieldType.INTEGER)
-class IntegerTortoise(FieldBridge[tortoise.fields.IntField]):
-    def mapping_to_field(self, mapping: FieldMapping) -> tortoise.fields.IntField:
+NumberField = typing.Union[tortoise.fields.IntField, tortoise.fields.FloatField]
+
+
+class NumberTortoise(FieldBridge[NumberField]):
+    def mapping_to_field(self, mapping: FieldMapping) -> NumberField:
         validators: list[tortoise.validators.Validator] = []
 
         if mapping.ge is not None:
@@ -105,7 +108,13 @@ class IntegerTortoise(FieldBridge[tortoise.fields.IntField]):
         if mapping.le is not None:
             validators.append(tortoise.validators.MaxValueValidator(mapping.le))
 
-        return tortoise.fields.IntField(
+        field_t = (
+            tortoise.fields.IntField
+            if mapping.type == FieldType.INTEGER
+            else tortoise.fields.FloatField
+        )
+
+        return field_t(
             pk=mapping.primary_key,
             unique=mapping.unique,
             null=mapping.nullable,
@@ -114,8 +123,11 @@ class IntegerTortoise(FieldBridge[tortoise.fields.IntField]):
             index=mapping.index,
         )
 
-    def field_to_mapping(
-        self, name: str, field: tortoise.fields.IntField
+    def field_to_mapping_with_type(
+        self,
+        name: str,
+        field_type: FieldType,
+        field: NumberField,
     ) -> FieldMapping:
         kwargs: dict[str, int] = {}
         field_info: dict = field.__dict__
@@ -128,7 +140,7 @@ class IntegerTortoise(FieldBridge[tortoise.fields.IntField]):
 
         return FieldMapping(
             name=name,
-            type=FieldType.INTEGER,
+            type=field_type,
             nullable=field_info["null"],
             primary_key=field_info["pk"],
             unique=field_info["unique"],
@@ -136,6 +148,21 @@ class IntegerTortoise(FieldBridge[tortoise.fields.IntField]):
             index=field_info["index"],
             **kwargs,
         )
+
+    def field_to_mapping(self, name: str, field: NumberField) -> FieldMapping:
+        raise NotImplementedError()
+
+
+@TortoiseBridge.field(FieldType.INTEGER)
+class IntegerTortoise(NumberTortoise):
+    def field_to_mapping(self, name: str, field: NumberField) -> FieldMapping:
+        return self.field_to_mapping_with_type(name, FieldType.INTEGER, field)
+
+
+@TortoiseBridge.field(FieldType.FLOAT)
+class FloatTortoise(NumberTortoise):
+    def field_to_mapping(self, name: str, field: NumberField) -> FieldMapping:
+        return self.field_to_mapping_with_type(name, FieldType.FLOAT, field)
 
 
 @TortoiseBridge.field(FieldType.STRING)

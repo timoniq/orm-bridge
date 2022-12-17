@@ -9,6 +9,7 @@ from orm_bridge.bridge.abc import Bridge, FieldBridge, ErrorMode
 
 ORMAR_TYPE_MAPPING = {
     "Integer": FieldType.INTEGER,
+    "Float": FieldType.FLOAT,
     "String": FieldType.STRING,
     "Boolean": FieldType.BOOLEAN,
     "ForeignKey": FieldType.FOREIGN_KEY,
@@ -62,10 +63,19 @@ class OrmarBridge(Bridge[ormar.Model]):
         return meta.tablename
 
 
+NumberField = typing.Union[ormar.fields.Integer, ormar.fields.Float]
+
+
 @OrmarBridge.field(FieldType.INTEGER)
-class IntegerOrmar(FieldBridge[ormar.fields.Integer]):
-    def mapping_to_field(self, mapping: FieldMapping) -> ormar.fields.Integer:
-        return ormar.fields.Integer(
+@OrmarBridge.field(FieldType.FLOAT)
+class NumberOrmar(FieldBridge[NumberField]):
+    def mapping_to_field(self, mapping: FieldMapping) -> NumberField:
+        field_t = (
+            ormar.fields.Integer
+            if mapping.type == FieldType.INTEGER
+            else FieldType.FLOAT
+        )
+        return field_t(
             nullable=mapping.nullable,
             default=mapping.default,
             pk=mapping.primary_key,
@@ -75,11 +85,11 @@ class IntegerOrmar(FieldBridge[ormar.fields.Integer]):
             index=mapping.index,
         )
 
-    def field_to_mapping(self, name: str, field: ormar.fields.Integer) -> FieldMapping:
+    def field_to_mapping(self, name: str, field: NumberField) -> FieldMapping:
         info = field.__dict__
         return FieldMapping(
             name=name,
-            type=FieldType.INTEGER,
+            type=FieldType.INTEGER if info["__type__"] == int else FieldType.FLOAT,
             nullable=info["nullable"] and not info.get("primary_key"),
             default=info.get("ormar_default", None),
             primary_key=info.get("primary_key", False),

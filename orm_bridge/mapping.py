@@ -5,10 +5,12 @@ import pydantic
 
 
 Value = typing.Any
+Number = typing.Union[float, int]
 
 
 class FieldType(enum.Enum):
     INTEGER = "integer"
+    FLOAT = "float"
     STRING = "string"
     BOOLEAN = "boolean"
     FOREIGN_KEY = "foreign_key"
@@ -24,8 +26,8 @@ class FieldMapping(pydantic.BaseModel):
     default: typing.Optional[Value] = None
     primary_key: bool = False
     max_length: int = 255
-    ge: typing.Optional[int] = None
-    le: typing.Optional[int] = None
+    ge: typing.Optional[Number] = None
+    le: typing.Optional[Number] = None
     autoincrement: bool = False
     unique: bool = False
     index: bool = False
