@@ -14,11 +14,23 @@ TORTOISE_TYPE_MAPPING = {
     "CharEnumFieldInstance": FieldType.STRING,
     "BooleanField": FieldType.BOOLEAN,
     "ForeignKeyFieldInstance": FieldType.FOREIGN_KEY,
+    "ManyToManyFieldInstance": FieldType.MANY2MANY,
 }
 
 
 def get_tablename(model: typing.Type[tortoise.Model]) -> str:
     return model._meta.db_table or model.__name__.lower() + "s"
+
+
+def get_tablename_from_tortoise_name(tortoise_name: str, bridge: Bridge) -> str:
+    tablename: str = ""
+
+    if "tortoise_names" in bridge.environment.options:
+        tablename = bridge.environment.options["tortoise_names"].get(tortoise_name)
+    if not tablename:
+        # Guessing the tablename
+        tablename = tortoise_name.split(".")[-1].lower() + "s"
+    return tablename
 
 
 def get_tortoise_name(tablename: str, bridge: Bridge) -> str:
@@ -34,7 +46,7 @@ def get_tortoise_name(tablename: str, bridge: Bridge) -> str:
     # Guessing the tortoise name
     if tablename.endswith("ies"):
         tablename = tablename.removesuffix("ies") + "y"
-    elif tablename.endswith("es"):
+    elif tablename.endswith("sses"):
         tablename = tablename.removesuffix("es")
     else:
         tablename = tablename.removesuffix("s")
@@ -72,7 +84,7 @@ class TortoiseBridge(Bridge[tortoise.Model]):
                     continue
                 raise FieldBridgeError(
                     name,
-                    f"no translation for ormar type {field.__class__.__name__}",
+                    f"no translation for tortoise type {field.__class__.__name__}",
                 )
             field_mapping = self.fields[field_type](self)
             fields.append(field_mapping.field_to_mapping(name, field))
@@ -216,20 +228,40 @@ class FKTortoise(FieldBridge[tortoise.fields.ForeignKeyRelation]):
     ) -> FieldMapping:
         info = field.__dict__
 
-        tablename: str = ""
-
-        if "tortoise_names" in self.model_bridge.environment.options:
-            tablename = self.model_bridge.environment.options["tortoise_names"].get(
-                info["model_name"]
-            )
-        if not tablename:
-            # Guessing the tablename
-            tablename = info["model_name"].split(".")[-1].lower() + "s"
-
         return FieldMapping(
             name=name,
             type=FieldType.FOREIGN_KEY,
-            tablename=tablename,
+            tablename=get_tablename_from_tortoise_name(
+                info["model_name"], self.model_bridge
+            ),
             related_name=info["related_name"] or None,
             skip_reverse=info["related_name"] is False,
+        )
+
+
+@TortoiseBridge.field(FieldType.MANY2MANY)
+class M2MTortoise(FieldBridge[tortoise.fields.ManyToManyRelation]):
+    def mapping_to_field(
+        self, mapping: FieldMapping
+    ) -> tortoise.fields.ManyToManyRelation:
+        assert mapping.tablename
+        tortoise_name: str = get_tortoise_name(mapping.tablename, self.model_bridge)
+        return tortoise.fields.ManyToManyField(
+            "models." + tortoise_name,
+            through=("models." + get_tortoise_name(mapping.through, self.model_bridge))
+            if mapping.through
+            else None,
+        )
+
+    def field_to_mapping(
+        self, name: str, field: tortoise.fields.ManyToManyRelation
+    ) -> FieldMapping:
+        info = field.__dict__
+        tablename = get_tablename_from_tortoise_name(
+            info["model_name"], self.model_bridge
+        )
+        return FieldMapping(
+            name=name,
+            type=FieldType.MANY2MANY,
+            tablename=tablename,
         )

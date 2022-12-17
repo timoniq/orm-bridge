@@ -1,6 +1,6 @@
 from orm_bridge.bridge.ormar import OrmarBridge
 from orm_bridge.mapping import FieldType, FieldMapping
-from tests.ormar_models import User, Registration
+from tests.ormar_models import User, Registration, Promocode
 
 
 def test_ormar_mapping() -> None:
@@ -47,4 +47,17 @@ def test_ormar_mapping_fk() -> None:
         name="user",
         type=FieldType.FOREIGN_KEY,
         tablename="users",
+    )
+
+
+def test_ormar_mapping_m2m() -> None:
+    bridge = OrmarBridge()
+    mapping = bridge.get_mapping(Promocode)
+    assert mapping.name == "promocodes"
+    assert mapping.fields[0].type == FieldType.INTEGER
+    assert mapping.fields[1].type == FieldType.STRING
+    assert mapping.fields[2] == FieldMapping(
+        name="events",
+        type=FieldType.MANY2MANY,
+        tablename="events",
     )

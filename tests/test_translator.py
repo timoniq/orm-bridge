@@ -3,12 +3,12 @@ from orm_bridge.bridge.tortoise import TortoiseBridge
 from orm_bridge.translator import Translator
 from orm_bridge.mapping import FieldMapping, FieldType
 
-from tests.ormar_models import User, Event, Registration
+from tests.ormar_models import User, Event, Registration, Promocode
 
 
 def test_translator() -> None:
     translator = Translator(OrmarBridge(), TortoiseBridge())
-    result = translator.translate_many(User, Event, Registration)
+    result = translator.translate_many(User, Event, Registration, Promocode)
     assert User in result
     assert Event in result
     assert Registration in result
@@ -42,4 +42,12 @@ def test_translator() -> None:
         type=FieldType.STRING,
         max_length=8,
         choices={"customer", "seller"},
+    )
+
+    promocode = result[Promocode]
+    mapping = TortoiseBridge().get_mapping(promocode)
+    assert mapping.fields[2] == FieldMapping(
+        name="events",
+        type=FieldType.MANY2MANY,
+        tablename="events",
     )

@@ -31,3 +31,13 @@ class Registration(ormar.Model):
     class Meta(ormar.ModelMeta):
         tablename: str = "registrations"
         abstract = True
+
+
+class Promocode(ormar.Model):
+    id = ormar.Integer(primary_key=True, autoincrement=True, nullable=False)
+    code = ormar.String(max_length=63, nullable=False)
+    events = ormar.ManyToMany(Event)
+
+    class Meta(ormar.ModelMeta):
+        tablename: str = "promocodes"
+        abstract = True

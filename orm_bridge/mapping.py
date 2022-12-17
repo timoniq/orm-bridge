@@ -12,6 +12,7 @@ class FieldType(enum.Enum):
     STRING = "string"
     BOOLEAN = "boolean"
     FOREIGN_KEY = "foreign_key"
+    MANY2MANY = "many_to_many"
     DATETIME = "datetime"
 
 
@@ -31,6 +32,7 @@ class FieldMapping(pydantic.BaseModel):
     tablename: typing.Optional[str] = None
     related_name: typing.Optional[str] = None
     skip_reverse: bool = False
+    through: typing.Optional[str] = None
 
 
 class ModelMapping(pydantic.BaseModel):

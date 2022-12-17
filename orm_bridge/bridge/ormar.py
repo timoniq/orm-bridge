@@ -12,6 +12,7 @@ ORMAR_TYPE_MAPPING = {
     "String": FieldType.STRING,
     "Boolean": FieldType.BOOLEAN,
     "ForeignKey": FieldType.FOREIGN_KEY,
+    "ManyToMany": FieldType.MANY2MANY,
 }
 
 
@@ -164,4 +165,22 @@ class FKOrmar(FieldBridge[ormar.fields.ForeignKeyField]):
             tablename=tablename,
             related_name=info["related_name"],
             skip_reverse=info["skip_reverse"],
+        )
+
+
+@OrmarBridge.field(FieldType.MANY2MANY)
+class M2MOrmar(FieldBridge[ormar.fields.ManyToManyField]):
+    def mapping_to_field(self, mapping: FieldMapping) -> ormar.fields.ManyToManyField:
+        raise NotImplementedError()
+
+    def field_to_mapping(
+        self, name: str, field: ormar.fields.ManyToManyField
+    ) -> FieldMapping:
+        info = field.__dict__
+        to_model = info["to"]
+        return FieldMapping(
+            name=name,
+            type=FieldType.MANY2MANY,
+            tablename=self.model_bridge.get_tablename(to_model),
+            through=info["through_relation_name"],
         )
