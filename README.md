@@ -9,5 +9,6 @@ Supported ORMS:
 
 * Tortoise ORM
 * Ormar
+* SQLAlchemy
 
 (c) arseny, 2022
