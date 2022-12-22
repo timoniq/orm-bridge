@@ -11,4 +11,4 @@ Supported ORMS:
 * Ormar
 * SQLAlchemy
 
-(c)  arseny, 2022
+(c) arseny, 2022

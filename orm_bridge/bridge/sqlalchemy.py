@@ -68,8 +68,13 @@ NumberField = typing.Union[sqlalchemy.Integer, sqlalchemy.Float]
 @SQLAlchemyBridge.field(FieldType.FLOAT)
 class NumericSQLAlchemy(FieldBridge[sqlalchemy.INTEGER]):
     def mapping_to_field(self, mapping: FieldMapping) -> sqlalchemy.Column[NumberField]:
+        field_type = (
+            sqlalchemy.Integer
+            if mapping.type == FieldType.INTEGER
+            else FieldType.FLOAT
+        )
         return sqlalchemy.Column(
-            sqlalchemy.Integer(),
+            field_type,
             nullable=mapping.nullable,
             default=mapping.default,
             primary_key=mapping.primary_key,
@@ -97,11 +102,10 @@ class NumericSQLAlchemy(FieldBridge[sqlalchemy.INTEGER]):
 class StringSQLAlchemy(FieldBridge[sqlalchemy.String]):
     def mapping_to_field(self, mapping: FieldMapping) -> sqlalchemy.Column[sqlalchemy.String]:
         return sqlalchemy.Column(
-            sqlalchemy.String(),
+            sqlalchemy.String(mapping.max_length),
             nullable=mapping.nullable,
             default=mapping.default,
             primary_key=mapping.primary_key,
-            max_length=mapping.max_length,
             index=mapping.index,
         )
 
@@ -127,7 +131,7 @@ class StringSQLAlchemy(FieldBridge[sqlalchemy.String]):
 class BooleanSQLAlchemy(FieldBridge[sqlalchemy.Boolean]):
     def mapping_to_field(self, mapping: FieldMapping) -> sqlalchemy.Column[sqlalchemy.Boolean]:
         return sqlalchemy.Column(
-            sqlalchemy.Boolean(),
+            sqlalchemy.Boolean,
             nullable=mapping.nullable,
             default=mapping.default,
             primary_key=mapping.primary_key,
